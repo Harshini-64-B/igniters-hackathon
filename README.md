@@ -87,5 +87,5 @@ Fine calculation for overdue items
 Email notifications
 
  Developed By:
-B.Harshini, Solo participant @ IIITDM Kancheepuram 24-Hour Hackathon (2025)
+B.Harshini, @ IIITDM Kancheepuram 24-Hour Hackathon (2025)
 
