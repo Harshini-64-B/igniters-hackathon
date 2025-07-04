@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reserve Equipment</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background-color: #f2f2f2;
+    }
+    h1 {
+      color: #333;
+    }
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Reserve Equipment</h1>
+  <form action="/reserve" method="POST">
+    <label for="equipmentName">Equipment Name</label>
+    <input type="text" id="equipmentName" name="equipmentName" placeholder="e.g. 3D Printer" required />
+
+    <label for="studentName">Student Name</label>
+    <input type="text" id="studentName" name="studentName" placeholder="Your Name" required />
+
+    <label for="studentEmail">Student Email</label>
+    <input type="email" id="studentEmail" name="studentEmail" placeholder="you@example.com" required />
+
+    <label for="projectName">Project Name</label>
+    <input type="text" id="projectName" name="projectName" placeholder="Project Title" />
+
+    <label for="duration">Duration</label>
+    <input type="text" id="duration" name="duration" placeholder="e.g. 2 hours" required />
+
+    <label for="purpose">Purpose</label>
+    <textarea id="purpose" name="purpose" placeholder="Describe what you want to do"></textarea>
+
+    <!-- only the authorizer select now -->
+    <label for="authorizer">Send for Approval To</label>
+    <select id="authorizer" name="authorizer" required>
+      <option value="">Loading authorizers…</option>
+    </select>
+
+    <button type="submit">Submit Reservation</button>
+  </form>
+
+  <script>
+    const authorizerSelect = document.getElementById('authorizer');
+
+    // Fetch all users whose role is one of the approver-roles
+    fetch('http://localhost:3000/users?roles=tech_sec,club_lead,faculty,phd_scholar')
+      .then(res => res.json())
+      .then(users => {
+        authorizerSelect.innerHTML = '<option value="">Select Authorizer</option>';
+        users.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.user_id;
+          opt.textContent = `${u.name} (${u.role.replace('_', ' ')})`;
+          authorizerSelect.appendChild(opt);
+        });
+      })
+      .catch(err => {
+        console.error('Could not load authorizers', err);
+        authorizerSelect.innerHTML = '<option value="">Error loading list</option>';
+      });
+  </script>
+</body>
+</html>

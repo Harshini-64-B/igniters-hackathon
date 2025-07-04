@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tinker Lab Catalog</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background-color: #f2f2f2;
+    }
+    h1 {
+      color: #333;
+    }
+
+    /* NEW: controls bar */
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .controls input,
+    .controls select {
+      padding: 8px;
+      font-size: 1rem;
+    }
+
+    .equipment-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .equipment-card {
+      background: white;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.9);
+      justify-content: space-between;
+    }
+
+    .equipment-card p {
+      word-wrap: break-word;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .equipment-card img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 5px;
+    }
+    .equipment-card h3 {
+      margin: 10px 0 5px;
+      color: #0077cc;
+    }
+    .status {
+      font-weight: bold;
+      color: green;
+    }
+    .status.in_use {
+      color: orange;
+    }
+    .status.maintenance {
+      color: red;
+    }
+
+    /* 1. Style the search + dropdown nicely */
+    .controls input,
+    .controls select {
+      padding: 10px 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #fff;
+      font-size: 1rem;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      transition: border-color 0.2s;
+    }
+
+    .controls input:focus,
+    .controls select:focus {
+      outline: none;
+      border-color: #0077cc;
+    }
+
+    /* 2. Prevent single cards from spanning the whole width */
+    .equipment-list {
+      display: grid;
+      /* max-width for each card = 300px, min = 250px */
+      grid-template-columns: repeat(auto-fit, minmax(250px, 300px));
+      justify-content: left;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    /* Style your Reserve button for more polish */
+    .equipment-card button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      background-color: #0077cc;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .equipment-card button:hover {
+      background-color: #005fa3;
+    }
+
+  </style>
+</head>
+<body>
+  <h1>Equipment Catalog</h1>
+
+  <!-- ADDED: Search + Category filter -->
+  <div class="controls">
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Search equipment..."
+    />
+    <select id="categorySelect">
+      <option value="">All Categories</option>
+    </select>
+  </div>
+
+  <div class="equipment-list" id="equipment-list">
+    <!-- Dynamic content will go here -->
+  </div>
+
+  <script>
+    // hold the full list
+    let equipmentData = [];
+
+    // grab controls
+    const searchInput = document.getElementById('searchInput');
+    const categorySelect = document.getElementById('categorySelect');
+    const container = document.getElementById('equipment-list');
+
+    // fetch once, store, populate category dropdown, initial render
+    fetch('http://localhost:3000/equipment')
+      .then(res => res.json())
+      .then(data => {
+        equipmentData = data;
+        populateCategories(data);
+        renderList(data);
+      })
+      .catch(err => console.error('Error fetching equipment:', err));
+
+    // build dropdown options from unique categories
+    function populateCategories(list) {
+      const cats = [...new Set(list.map(i => i.category))].sort();
+      cats.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        categorySelect.appendChild(opt);
+      });
+    }
+
+    // filter + render on input/select change
+    searchInput.addEventListener('input', applyFilters);
+    categorySelect.addEventListener('change', applyFilters);
+
+    function applyFilters() {
+      const term = searchInput.value.toLowerCase();
+      const cat  = categorySelect.value;
+      const filtered = equipmentData.filter(item => {
+        const matchesSearch =
+          item.name.toLowerCase().includes(term) ||
+          item.description.toLowerCase().includes(term);
+        const matchesCategory = cat === '' || item.category === cat;
+        return matchesSearch && matchesCategory;
+      });
+      renderList(filtered);
+    }
+
+    // you had inline HTML before; we factor it out here
+    function renderList(list) {
+      container.innerHTML = '';
+      list.forEach(item => {
+        const imageUrl = item.imageURL || 'https://via.placeholder.com/200';
+        const card = `
+          <div class="equipment-card">
+            <img src="${imageUrl}" alt="Equipment Image" />
+            <h3>${item.name}</h3>
+            <p>${item.description}</p>
+            <p><strong>Category:</strong> ${item.category}</p>
+            <p><strong>Location:</strong> ${item.location}</p>
+            <p class="status ${item.status.replace(' ', '_')}">
+              <strong>Status:</strong> ${item.status}
+            </p>
+            <p><strong>Total:</strong> ${item.total_quantity}</p>
+            <p><strong>Available:</strong> ${item.available_quantity}</p>
+            <button onclick="reserve('${item.name}')">Reserve</button>
+          </div>
+        `;
+        container.innerHTML += card;
+      });
+    }
+
+    function reserve(equipmentName) {
+      window.location.href = `reserve.html?equipment=${encodeURIComponent(equipmentName)}`;
+    }
+  </script>
+</body>
+</html>
